@@ -6,7 +6,7 @@ set -e
 cd `dirname $0`
 
 pip install --upgrade virtualenv
-virtualenv .
+virtualenv --system-site-packages .
 
 # I don't know why this is created.
 rm -rf local

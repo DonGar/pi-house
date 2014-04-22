@@ -41,9 +41,7 @@ class HelperLoop(object):
   def run_forever(self):
     while True:
       rread = self._incoming_connections.keys()
-      print "Blocking on: %s" % rread
       rready, _, _ = select.select(self._incoming_connections.keys(), [], [])
-      print "Unblocked on: %s" % rready
 
       for c in rready:
         try:
