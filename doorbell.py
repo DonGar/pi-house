@@ -39,7 +39,6 @@ class Doorbell(helper.HelperLoop):
     }
 
   def handle_button_bell(self, update):
-
     now = time.time()
 
     if update['button'] and not self.button_down:
@@ -52,10 +51,13 @@ class Doorbell(helper.HelperLoop):
     if update['button'] != update['ring']:
       self.button_bell.connection.send(dict(ring=update['button']))
 
-
   def handle_status(self, update):
-    pass
+    print "Status: %s" % update
+    updated_status_value = update['status']
 
+    # Recreate our adapter status is it's empty (ie: on monitor restart)
+    if not updated_status_value:
+      self.status.update(self.create_empty_components())
 
 def main():
   Doorbell().run_forever()
