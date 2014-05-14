@@ -10,10 +10,6 @@ class Doorbell(helper.HelperLoop):
 
   ADAPTER_URL = 'http://www:8080/status/doorbell'
 
-  # We only send an external notification if there wasn't a button press for
-  # at least this many seconds.
-  NOTIFY_DELAY = 30
-
   def __init__(self):
     super(Doorbell, self).__init__()
 
@@ -21,8 +17,8 @@ class Doorbell(helper.HelperLoop):
     self.button_bell = button_bell_helper.Helper()
     self.status = helper.status.Helper(self.ADAPTER_URL)
 
+    # Remember the current status of the button push.
     self.button_down = False
-    self.button_last_pushed = None
 
     # Reset the adaptor values BEFORE starting helpers.
     self.status.update(self.create_empty_components(), blocking=True)
@@ -42,10 +38,9 @@ class Doorbell(helper.HelperLoop):
     now = time.time()
 
     if update['button'] and not self.button_down:
-      self.button_down = True
-      self.button_last_pushed = now
-      self.button_bell.connection.send(dict(ring=update['button']))
       self.status.push_button('doorbell')
+
+    self.button_down = update['button']
 
     # Make the bell match the button.
     if update['button'] != update['ring']:
@@ -55,7 +50,7 @@ class Doorbell(helper.HelperLoop):
     print "Status: %s" % update
     updated_status_value = update['status']
 
-    # Recreate our adapter status is it's empty (ie: on monitor restart)
+    # Recreate our adapter status if it's empty (ie: on monitor restart)
     if not updated_status_value:
       self.status.update(self.create_empty_components())
 

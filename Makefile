@@ -16,6 +16,7 @@ clean:
 	rm -rf bin include lib local
 
 remote:
-	rsync -avPh --delete --exclude bin \
-	  --exclude include --exclude lib --exclude local --exclude \*.pyc \
+	rsync -avPh --delete \
+          --exclude bin --exclude include --exclude lib --exclude local \
+          --exclude \*.pyc --exclude .idea  \
 	  ./ ${REMOTE}:test/
