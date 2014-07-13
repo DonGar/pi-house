@@ -6,10 +6,10 @@ setup:
 	./setup_virtualenv
 
 lint:
-	pylint --rcfile pylintrc *.py helper/*.py
+	bin/pylint --rcfile pylintrc *.py helper/*.py
 
 test:
-	python -m unittest discover
+	bin/python -m unittest discover
 
 clean:
 	find . -iname \*.pyc -print0 | xargs -0r rm

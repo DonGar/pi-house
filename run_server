@@ -6,5 +6,4 @@ if [ "$2" == "-setup" ]; then
     ./setup_virtualenv
 fi
 
-source bin/activate
-exec python $1
+exec bin/python $1
