@@ -30,6 +30,7 @@ class Helper(helper.HelperBase):
         if r:
           rj = r.json()
           revision = rj['revision']
+          print "Status: %s" % rj
           self._connection.send(rj)
 
       except requests.ConnectionError:

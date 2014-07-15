@@ -2,6 +2,7 @@
 
 import time
 
+# pylint: disable=import-error
 import RPi.GPIO as GPIO
 
 import helper

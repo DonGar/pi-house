@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import time
-
 import button_bell_helper
 import helper
 import helper.status
@@ -30,13 +28,11 @@ class Doorbell(helper.HelperLoop):
   def create_empty_components(self):
     """Create an empty template for the status adapter we maintain."""
     return {
-      'button': {'doorbell': {}},
-      'bell': {'doorbell': {}},
-    }
+        'button': {'doorbell': {}},
+        'bell': {'doorbell': {}},
+        }
 
   def handle_button_bell(self, update):
-    now = time.time()
-
     if update['button'] and not self.button_down:
       self.status.push_button('doorbell')
 

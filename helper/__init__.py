@@ -40,7 +40,6 @@ class HelperLoop(object):
 
   def run_forever(self):
     while True:
-      rread = self._incoming_connections.keys()
       rready, _, _ = select.select(self._incoming_connections.keys(), [], [])
 
       for c in rready:

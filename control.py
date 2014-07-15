@@ -66,9 +66,9 @@ class Control(helper.HelperLoop):
       rgbs[self.RGBS[i]] = {'color': self.color_state[i]}
 
     return {
-      'button': {button: {} for button in self.BUTTONS},
-      'rgb': rgbs,
-    }
+        'button': {button: {} for button in self.BUTTONS},
+        'rgb': rgbs,
+        }
 
   def update_status_color(self, component, color):
     """Update the current color value for an RGB component.
@@ -102,7 +102,6 @@ class Control(helper.HelperLoop):
     #   {u'status': {},
     #    u'url': u'http://www:8081/status/control',
     #    u'revision': 3}
-    print "Status: %s" % update
     updated_status_value = update['status']
 
     # Recreate our adapter status is it's empty (ie: on monitor restart)
