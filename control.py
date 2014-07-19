@@ -40,9 +40,6 @@ class Control(helper.HelperLoop):
     self.serial = helper.serial_port.Helper(self.SERIAL_PORT)
     self.status = helper.status.Helper(self.ADAPTER_URL)
 
-    # Reset the adaptor values BEFORE starting helpers.
-    self.status.update(self.create_empty_components(), blocking=True)
-
     # Register/start our helpers for the main loop.
     self.setup_helper(self.serial, self.handle_serial_read)
     self.setup_helper(self.status, self.handle_status_read)
@@ -65,10 +62,11 @@ class Control(helper.HelperLoop):
     for i in xrange(len(self.RGBS)):
       rgbs[self.RGBS[i]] = {'color': self.color_state[i]}
 
-    return {
+    components = {
         'button': {button: {} for button in self.BUTTONS},
         'rgb': rgbs,
         }
+    self.status.update(components, blocking=True)
 
   def update_status_color(self, component, color):
     """Update the current color value for an RGB component.
@@ -107,13 +105,19 @@ class Control(helper.HelperLoop):
     #  A) It's None (error like 404 retrieving value)
     #  B) Our response is malformed.
     #  C) The component retrieved is empty (like after server restart)
-    if not update or not 'status' in update or not update['status']:
-      self.status.update(self.create_empty_components())
+    if not update:
+      self.create_empty_components()
       return
 
-    updated_status_value = update['status']
+    updated_status_value = update.get('status', None)
+    if not updated_status_value:
+      self.create_empty_components()
+      return
 
     rgb_components = updated_status_value.get('rgb', {})
+    if not rgb_components:
+      self.create_empty_components()
+      return
 
     # Look for new target colors to update our RGBs too.
     new_colors = self.color_state[:]

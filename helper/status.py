@@ -43,7 +43,7 @@ class Helper(helper.HelperBase):
         time.sleep(5)
         self._connection.send(None)
 
-      except (requests.ConnectionError):
+      except requests.ConnectionError:
         # If we got an error back from the server, wait a bit and try again.
         print 'Got a ConnectionError. Retrying shortly.'
         time.sleep(5)

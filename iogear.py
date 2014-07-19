@@ -15,10 +15,7 @@ class IoGear(helper.HelperLoop):
     self.status = helper.status.Helper(self.ADAPTER_URL)
 
     # Reset the adaptor values BEFORE starting helpers.
-    self.status.update(self.create_empty_components(), blocking=True)
-
-    # Send an initial query over the serial line to find out the current port.
-    self.serial.connection.send('?')
+    self.create_empty_components()
 
     # Register/start our helpers for the main loop.
     self.setup_helper(self.serial, self.handle_serial_read)
@@ -30,7 +27,12 @@ class IoGear(helper.HelperLoop):
     The adaptor cotains a component named 'desktop', of type 'iogear'.
     Values on the component will be filled in when available.
     """
-    return {'active': None}
+    # Create our basic component.
+    empty_component = {'active': None}
+    self.status.update(empty_component, blocking=True)
+
+    # Send an initial query over the serial line to find out the current port.
+    self.serial.connection.send('?')
 
   def handle_status_read(self, update):
     # update format like:
@@ -42,22 +44,24 @@ class IoGear(helper.HelperLoop):
     #  A) It's None (error like 404 retrieving value)
     #  B) Our response is malformed.
     #  C) The component retrieved is empty (like after server restart)
-    if not update or not 'status' in update or not update['status']:
-      self.status.update(self.create_empty_components())
+    if not update:
+      self.create_empty_components()
       return
 
-    desktop_component = update['status']
+    desktop_component = update.get('status', None)
+    if not desktop_component:
+      self.create_empty_components()
+      return
 
-    # Target is expected to be an integer 0 <= target <= 3. We don't validate,
-    # just pass along.
+    # Target is expected to be an integer 0 <= target <= 3, if present.
     target = desktop_component.get('active_target', None)
 
-    if target:
+    if target != None:
       # Send the new target over the serial line.
       self.serial.connection.send(target)
 
-      # Clear the target value. If it's updated before we clear it, the revision
-      # will protect the new value.
+      # Clear the target value. If it's updated before we clear it, the
+      # revision will protect the new value.
       self.status.update(
           None, sub_path='active_target', revision=update['revision'])
 

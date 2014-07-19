@@ -19,7 +19,7 @@ class Doorbell(helper.HelperLoop):
     self.button_down = False
 
     # Reset the adaptor values BEFORE starting helpers.
-    self.status.update(self.create_empty_components(), blocking=True)
+    self.create_empty_components()
 
     # Register/start our helpers for the main loop.
     self.setup_helper(self.button_bell, self.handle_button_bell)
@@ -27,10 +27,11 @@ class Doorbell(helper.HelperLoop):
 
   def create_empty_components(self):
     """Create an empty template for the status adapter we maintain."""
-    return {
+    components = {
         'button': {'doorbell': {}},
         'bell': {'doorbell': {}},
         }
+    self.status.update(components, blocking=True)
 
   def handle_button_bell(self, update):
     if update['button'] and not self.button_down:
@@ -46,14 +47,14 @@ class Doorbell(helper.HelperLoop):
     print "Status: %s" % update
 
     if not update:
-      self.status.update(self.create_empty_components())
+      self.create_empty_components()
       return
 
     updated_status_value = update['status']
 
     # Recreate our adapter status if it's empty (ie: on monitor restart)
     if not updated_status_value:
-      self.status.update(self.create_empty_components())
+      self.create_empty_components()
       return
 
 def main():
