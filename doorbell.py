@@ -44,11 +44,17 @@ class Doorbell(helper.HelperLoop):
 
   def handle_status(self, update):
     print "Status: %s" % update
+
+    if not update:
+      self.status.update(self.create_empty_components())
+      return
+
     updated_status_value = update['status']
 
     # Recreate our adapter status if it's empty (ie: on monitor restart)
     if not updated_status_value:
       self.status.update(self.create_empty_components())
+      return
 
 def main():
   Doorbell().run_forever()

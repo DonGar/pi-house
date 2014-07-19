@@ -102,11 +102,16 @@ class Control(helper.HelperLoop):
     #   {u'status': {},
     #    u'url': u'http://www:8081/status/control',
     #    u'revision': 3}
-    updated_status_value = update['status']
 
-    # Recreate our adapter status is it's empty (ie: on monitor restart)
-    if not updated_status_value:
+    # Recreate our adapter status if:
+    #  A) It's None (error like 404 retrieving value)
+    #  B) Our response is malformed.
+    #  C) The component retrieved is empty (like after server restart)
+    if not update or not 'status' in update or not update['status']:
       self.status.update(self.create_empty_components())
+      return
+
+    updated_status_value = update['status']
 
     rgb_components = updated_status_value.get('rgb', {})
 

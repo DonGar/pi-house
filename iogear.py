@@ -37,12 +37,16 @@ class IoGear(helper.HelperLoop):
     #   {u'status': {...},
     #    u'url': u'http://www:8081/status/iogear/iogear/desktop',
     #    u'revision': 27}
-    desktop_component = update['status']
 
-    # Recreate our adapter status is it's empty (ie: on server restart)
-    if not desktop_component:
+    # Recreate our adapter status if:
+    #  A) It's None (error like 404 retrieving value)
+    #  B) Our response is malformed.
+    #  C) The component retrieved is empty (like after server restart)
+    if not update or not 'status' in update or not update['status']:
       self.status.update(self.create_empty_components())
       return
+
+    desktop_component = update['status']
 
     # Target is expected to be an integer 0 <= target <= 3. We don't validate,
     # just pass along.

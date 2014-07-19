@@ -27,13 +27,23 @@ class Helper(helper.HelperBase):
     while True:
       try:
         r = requests.get(self.adapter_url, params={'revision': revision})
-        if r:
-          rj = r.json()
-          revision = rj['revision']
-          print "Status: %s" % rj
-          self._connection.send(rj)
+        rj = r.json()
+        revision = rj['revision']
+        print "Status: %s" % rj
+        self._connection.send(rj)
 
-      except requests.ConnectionError:
+      except (KeyError, ValueError):
+        # If we reached the server, but got an error. Wait (to prevent spamming)
+        # but tell the main process so they can recreate the status value we
+        # care about.
+
+        # This might commonly happen on server restart if the component we are
+        # watching hasn't been recreated.
+        print 'Got a BadResponse. Retrying shortly.'
+        time.sleep(5)
+        self._connection.send(None)
+
+      except (requests.ConnectionError):
         # If we got an error back from the server, wait a bit and try again.
         print 'Got a ConnectionError. Retrying shortly.'
         time.sleep(5)
