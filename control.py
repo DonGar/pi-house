@@ -36,6 +36,9 @@ class Control(helper.HelperLoop):
     # What colors we are displaying?
     self.color_state = ['0,0,0'] * len(self.RGBS)
 
+    # What colors are we switching too?
+    self.target_colors = ['0,0,0'] * len(self.RGBS)
+
     # Create helpers for serial/status communication.
     self.serial = helper.serial_port.Helper(self.SERIAL_PORT)
     self.status = helper.status.Helper(self.ADAPTER_URL)
@@ -68,6 +71,24 @@ class Control(helper.HelperLoop):
         }
     self.status.update(components, blocking=True)
 
+  def verify_status_update(self, update):
+    if not update:
+      return False
+
+    updated_status_value = update.get('status', {})
+    if not updated_status_value:
+      return False
+
+    button_components = updated_status_value.get('button', {})
+    if not set(button_components.keys()) == set(self.BUTTONS):
+      return False
+
+    rgb_components = updated_status_value.get('rgb', {})
+    if not set(rgb_components.keys()) == set(self.RGBS):
+      return False
+
+    return True
+
   def update_status_color(self, component, color):
     """Update the current color value for an RGB component.
 
@@ -97,40 +118,20 @@ class Control(helper.HelperLoop):
 
   def handle_status_read(self, update):
     # update format like:
-    #   {u'status': {},
+    #   {u'status': {...},
     #    u'url': u'http://www:8081/status/control',
     #    u'revision': 3}
 
-    # Recreate our adapter status if:
-    #  A) It's None (error like 404 retrieving value)
-    #  B) Our response is malformed.
-    #  C) The component retrieved is empty (like after server restart)
-    if not update:
-      self.create_empty_components()
-      return
-
-    updated_status_value = update.get('status', None)
-    if not updated_status_value:
-      self.create_empty_components()
-      return
-
-    # Check for expected components, and create if missing.
-    button_components = updated_status_value.get('button', {})
-    if not set(button_components.keys()) == set(self.BUTTONS):
-      self.create_empty_components()
-      return
-
-    rgb_components = updated_status_value.get('rgb', {})
-    if not set(rgb_components.keys()) == set(self.RGBS):
+    # Recreate our adapter status if it doesn't verify (server restart, etc)
+    if not self.verify_status_update(update):
       self.create_empty_components()
       return
 
     # Look for new target colors to update our RGBs too.
-    new_colors = self.color_state[:]
+    orig_targets = self.target_colors[:]
 
     for i in xrange(len(self.RGBS)):
-      component = rgb_components.get(self.RGBS[i], {})
-      target = component.get('color_target', None)
+      target = update['status']['rgb'][self.RGBS[i]].get('color_target', None)
       if target:
         # Clear target value.
         sub_path = os.path.join('rgb', self.RGBS[i], 'color_target')
@@ -138,11 +139,11 @@ class Control(helper.HelperLoop):
 
         # Validate target.
         self.validate_color(target)
-        new_colors[i] = target
+        self.target_colors[i] = target
 
     # If we aren't already using the target colors, update!
-    if new_colors != self.color_state:
-      self.update_serial_color(new_colors)
+    if orig_targets != self.target_colors:
+      self.update_serial_color(self.target_colors)
 
   def handle_serial_read(self, update):
     print "Serial: %s" % update
