@@ -127,7 +127,7 @@ class Control(helper.HelperLoop):
       target = component.get('target', None)
       if target:
         # Clear target value.
-        sub_path = os.path.join('rgb', self.RGBS[i], 'target')
+        sub_path = os.path.join('rgb', self.RGBS[i], 'color_target')
         self.status.update(None, sub_path=sub_path, revision=update['revision'])
 
         # Validate target.
