@@ -114,8 +114,14 @@ class Control(helper.HelperLoop):
       self.create_empty_components()
       return
 
+    # Check for expected components, and create if missing.
+    button_components = updated_status_value.get('button', {})
+    if not set(button_components.keys()) == set(self.BUTTONS):
+      self.create_empty_components()
+      return
+
     rgb_components = updated_status_value.get('rgb', {})
-    if not rgb_components:
+    if not set(rgb_components.keys()) == set(self.RGBS):
       self.create_empty_components()
       return
 
@@ -124,7 +130,7 @@ class Control(helper.HelperLoop):
 
     for i in xrange(len(self.RGBS)):
       component = rgb_components.get(self.RGBS[i], {})
-      target = component.get('target', None)
+      target = component.get('color_target', None)
       if target:
         # Clear target value.
         sub_path = os.path.join('rgb', self.RGBS[i], 'color_target')
