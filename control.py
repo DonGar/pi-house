@@ -51,7 +51,7 @@ class Control(helper.HelperLoop):
     if not self.COLOR_RE.match(color):
       raise ValueError("Bad color format.", color)
 
-  def create_empty_components(self):
+  def create_empty_components(self, revision):
     """Create an empty template for the status helper we maintain.
 
     This really means an empty dictionary for each component. Buttons
@@ -69,25 +69,7 @@ class Control(helper.HelperLoop):
         'button': {button: {} for button in self.BUTTONS},
         'rgb': rgbs,
         }
-    self.status.update(components, blocking=True)
-
-  def verify_status_update(self, update):
-    if not update:
-      return False
-
-    updated_status_value = update.get('status', {})
-    if not updated_status_value:
-      return False
-
-    button_components = updated_status_value.get('button', {})
-    if not set(button_components.keys()) == set(self.BUTTONS):
-      return False
-
-    rgb_components = updated_status_value.get('rgb', {})
-    if not set(rgb_components.keys()) == set(self.RGBS):
-      return False
-
-    return True
+    self.status.update(components, blocking=True, revision=revision)
 
   def update_status_color(self, component, color):
     """Update the current color value for an RGB component.
@@ -122,16 +104,15 @@ class Control(helper.HelperLoop):
     #    u'url': u'http://www:8081/status/control',
     #    u'revision': 3}
 
-    # Recreate our adapter status if it doesn't verify (server restart, etc)
-    if not self.verify_status_update(update):
-      self.create_empty_components()
-      return
+    # Look up our components.
+    button_components = update['status'].get('button', {})
+    rgb_components = update['status'].get('rgb', {})
 
     # Look for new target colors to update our RGBs too.
     orig_targets = self.target_colors[:]
 
     for i in xrange(len(self.RGBS)):
-      target = update['status']['rgb'][self.RGBS[i]].get('color_target', None)
+      target = rgb_components.get(self.RGBS[i], {}).get('color_target', None)
       if target:
         # Clear target value.
         sub_path = os.path.join('rgb', self.RGBS[i], 'color_target')
@@ -144,6 +125,16 @@ class Control(helper.HelperLoop):
     # If we aren't already using the target colors, update!
     if orig_targets != self.target_colors:
       self.update_serial_color(self.target_colors)
+
+    # If all of the expected components don't exist, recreate everything. We do
+    # this AFTER looking for new target colors, so that target's set at system
+    # startup (before we are notifed) don't get lost. Because we set revision,
+    # this creation may be lost. But if it is we'll get updated with the new
+    # revision and try again. This is better than losing updates we may care
+    # about.
+    if (set(button_components.keys()) != set(self.BUTTONS) or
+        set(rgb_components.keys()) != set(self.RGBS)):
+      self.create_empty_components(revision=update['revision'])
 
   def handle_serial_read(self, update):
     print "Serial: %s" % update
