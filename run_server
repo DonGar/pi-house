@@ -2,8 +2,39 @@
 
 cd `dirname $0`
 
-if [ "$2" == "-setup" ]; then
+while [[ $# > 0 ]]
+do
+key="$1"
+shift
+
+case $key in
+    --sleep)
+    SLEEP="$1"
+    shift
+    ;;
+    -s|--setup)
+    SETUP="1"
+    ;;
+    *)
+    # Unknowns become our command and arguments.
+    PROGRAM=("$key")
+    PROGRAM+=("$@")
+    break
+    ;;
+esac
+done
+
+if [[ -z "${PROGRAM}" ]]; then
+  echo "No program to run."
+  exit 1
+fi
+
+if [[ -n "${SLEEP}" ]]; then
+    sleep "${SLEEP}"
+fi
+
+if [ -n "${SETUP}" ]; then
     ./setup_virtualenv
 fi
 
-exec bin/python $1
+exec bin/python "${PROGRAM[@]}"
