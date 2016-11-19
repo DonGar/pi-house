@@ -5,7 +5,7 @@ import helper.serial_port
 
 class IoGear(helper.HelperLoop):
   SERIAL_PORT = '/dev/ttyACM0'
-  ADAPTER_URL = 'http://www:8080/status/iogear/iogear/desktop'
+  ADAPTER_URL = 'http://house:8080/status/iogear/iogear/desktop'
 
   def __init__(self):
     super(IoGear, self).__init__()

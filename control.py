@@ -9,7 +9,7 @@ import helper.serial_port
 
 class Control(helper.HelperLoop):
   SERIAL_PORT = '/dev/ttyUSB0'
-  ADAPTER_URL = 'http://www:8080/status/control'
+  ADAPTER_URL = 'http://house:8080/status/control'
 
   BUTTONS = ('block_2',
              'block_1',

@@ -6,7 +6,7 @@ import helper.status
 
 class Doorbell(helper.HelperLoop):
 
-  ADAPTER_URL = 'http://www:8080/status/doorbell'
+  ADAPTER_URL = 'http://house:8080/status/doorbell'
 
   def __init__(self):
     super(Doorbell, self).__init__()
